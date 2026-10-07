@@ -1,0 +1,1516 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cereal Science & Technology - Advanced Interactive Examination</title>
+<style>
+  :root {
+    --primary: #1e3a8a;
+    --primary-light: #3b82f6;
+    --primary-dark: #1e293b;
+    --accent: #d97706;
+    --bg: #f8fafc;
+    --card-bg: #ffffff;
+    --text: #0f172a;
+    --text-muted: #475569;
+    --border: #e2e8f0;
+    --correct-bg: #dcfce7;
+    --correct-border: #16a34a;
+    --correct-text: #14532d;
+    --incorrect-bg: #fee2e2;
+    --incorrect-border: #dc2626;
+    --incorrect-text: #7f1d1d;
+    --radius: 12px;
+    --shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+  body { background-color: var(--bg); color: var(--text); padding: 20px; line-height: 1.5; }
+  .quiz-container { max-width: 900px; margin: 0 auto; background: var(--card-bg); border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; border: 1px solid var(--border); }
+  
+  .header { background: linear-gradient(135deg, #1e3a8a, #0f172a); color: white; padding: 24px; text-align: center; position: relative; }
+  .header h1 { font-size: 1.6rem; font-weight: 700; margin-bottom: 6px; letter-spacing: -0.02em; }
+  .header p { font-size: 0.9rem; opacity: 0.85; }
+  
+  .quiz-meta { display: flex; justify-content: space-between; align-items: center; padding: 14px 24px; background: #f1f5f9; border-bottom: 1px solid var(--border); font-size: 0.85rem; font-weight: 600; color: var(--text-muted); }
+  .progress-bar-container { height: 8px; background: #e2e8f0; width: 100%; }
+  .progress-bar { height: 100%; background: var(--primary-light); width: 0%; transition: width 0.3s ease; }
+
+  .card-body { padding: 28px; }
+  
+  .q-meta-tag { display: inline-block; padding: 4px 10px; background: #eff6ff; color: var(--primary); border-radius: 20px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; margin-bottom: 12px; }
+  .q-text { font-size: 1.1rem; font-weight: 600; color: var(--text); margin-bottom: 18px; }
+  
+  .statement-box { background: #f8fafc; border-left: 4px solid var(--primary-light); padding: 14px 18px; border-radius: 0 8px 8px 0; margin-bottom: 20px; font-size: 0.98rem; }
+  .statement { margin-bottom: 10px; font-weight: 500; }
+  .statement:last-child { margin-bottom: 0; }
+  .stmt-label { font-weight: 700; color: var(--primary-dark); }
+
+  .options-grid { display: grid; grid-template-columns: 1fr; gap: 12px; margin-bottom: 24px; }
+  .option-btn { display: flex; align-items: center; text-align: left; background: #fff; border: 2px solid var(--border); border-radius: 8px; padding: 14px 18px; cursor: pointer; transition: all 0.2s ease; font-size: 0.95rem; font-weight: 500; width: 100%; color: var(--text); }
+  .option-btn:hover:not(:disabled) { border-color: var(--primary-light); background: #f0f7ff; }
+  .option-btn.selected { border-color: var(--primary-light); background: #eff6ff; }
+  .option-letter { width: 28px; height: 28px; border-radius: 50%; background: #e2e8f0; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.85rem; margin-right: 14px; flex-shrink: 0; color: var(--text-muted); }
+  .option-btn.selected .option-letter { background: var(--primary-light); color: white; }
+
+  .option-btn.correct-choice { border-color: var(--correct-border); background: var(--correct-bg); color: var(--correct-text); }
+  .option-btn.correct-choice .option-letter { background: var(--correct-border); color: white; }
+  .option-btn.wrong-choice { border-color: var(--incorrect-border); background: var(--incorrect-bg); color: var(--incorrect-text); }
+  .option-btn.wrong-choice .option-letter { background: var(--incorrect-border); color: white; }
+
+  .explanation-box { background: #f8fafc; border: 1px solid var(--border); border-radius: 8px; padding: 18px; margin-bottom: 24px; font-size: 0.92rem; display: none; }
+  .explanation-box.visible { display: block; }
+  .exp-title { font-weight: 700; margin-bottom: 8px; display: flex; align-items: center; gap: 8px; font-size: 0.95rem; }
+  .exp-title.correct { color: var(--correct-border); }
+  .exp-title.incorrect { color: var(--incorrect-border); }
+  .exp-detail { color: var(--text-muted); line-height: 1.6; }
+
+  .controls { display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border); padding-top: 20px; }
+  .btn { padding: 10px 22px; border-radius: 8px; font-weight: 600; font-size: 0.9rem; cursor: pointer; transition: all 0.2s ease; border: none; }
+  .btn-primary { background: var(--primary); color: white; }
+  .btn-primary:hover:not(:disabled) { background: #1d4ed8; }
+  .btn-secondary { background: #e2e8f0; color: var(--text-muted); }
+  .btn-secondary:hover:not(:disabled) { background: #cbd5e1; }
+  .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  .results-screen { padding: 36px 28px; text-align: center; }
+  .score-circle { width: 140px; height: 140px; border-radius: 50%; background: linear-gradient(135deg, #1e3a8a, #3b82f6); color: white; display: flex; flex-direction: column; align-items: center; justify-content: center; margin: 0 auto 24px; box-shadow: 0 10px 20px rgba(59, 130, 246, 0.3); }
+  .score-val { font-size: 2.4rem; font-weight: 800; line-height: 1; }
+  .score-total { font-size: 0.85rem; opacity: 0.8; margin-top: 4px; }
+  
+  .review-section { text-align: left; margin-top: 32px; border-top: 1px solid var(--border); padding-top: 24px; }
+  .filter-nav { display: flex; gap: 8px; margin-bottom: 20px; }
+  .filter-btn { padding: 6px 14px; border-radius: 20px; border: 1px solid var(--border); background: #fff; font-size: 0.8rem; font-weight: 600; cursor: pointer; }
+  .filter-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
+
+  .review-card { background: #fff; border: 1px solid var(--border); border-radius: 8px; padding: 16px; margin-bottom: 14px; font-size: 0.9rem; }
+  .review-card.is-correct { border-left: 4px solid var(--correct-border); }
+  .review-card.is-incorrect { border-left: 4px solid var(--incorrect-border); }
+
+  .nav-grid-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); justify-content: center; align-items: center; z-index: 100; }
+  .nav-grid-content { background: white; border-radius: 12px; max-width: 600px; width: 90%; padding: 24px; max-height: 80vh; overflow-y: auto; }
+  .grid-layout { display: grid; grid-template-columns: repeat(10, 1fr); gap: 8px; margin-top: 16px; }
+  .grid-item { aspect-ratio: 1; border-radius: 6px; border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.8rem; cursor: pointer; }
+  .grid-item.answered { background: #e0f2fe; border-color: #0284c7; color: #0369a1; }
+  .grid-item.current { ring: 2px solid var(--primary); font-weight: 900; background: var(--primary); color: white; }
+
+  @media (max-width: 640px) {
+    .grid-layout { grid-template-columns: repeat(5, 1fr); }
+    .quiz-meta { font-size: 0.75rem; padding: 10px 16px; }
+    .card-body { padding: 18px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="quiz-container">
+  <div class="header">
+    <h1>Cereal Science & Technology</h1>
+    <p>Comprehensive 75-Item Advanced Interactive Examination</p>
+  </div>
+  
+  <div class="progress-bar-container">
+    <div class="progress-bar" id="progressBar"></div>
+  </div>
+
+  <div class="quiz-meta">
+    <span id="questionTracker">Question 1 of 75</span>
+    <span id="scoreTracker">Score: 0 / 75</span>
+    <button class="btn btn-secondary" style="padding: 4px 10px; font-size: 0.75rem;" onclick="openNavGrid()">Jump to Question</button>
+  </div>
+
+  <div class="card-body" id="quizBody">
+    <!-- Active question will render here -->
+  </div>
+
+  <div class="card-body results-screen" id="resultsBody" style="display: none;">
+    <div class="score-circle">
+      <span class="score-val" id="finalScoreVal">0</span>
+      <span class="score-total">out of 75</span>
+    </div>
+    <h2 id="gradeTitle" style="margin-bottom: 8px; font-weight: 700;">Examination Completed</h2>
+    <p id="gradeFeedback" color="var(--text-muted)" style="margin-bottom: 24px; font-size: 0.95rem;"></p>
+
+    <div style="display: flex; justify-content: center; gap: 12px; margin-bottom: 24px;">
+      <button class="btn btn-primary" onclick="restartQuiz()">Retake Examination</button>
+    </div>
+
+    <div class="review-section">
+      <h3 style="margin-bottom: 14px; font-size: 1.1rem;">Item Analysis & Review</h3>
+      <div class="filter-nav">
+        <button class="filter-btn active" onclick="filterReview('all')">All Items (75)</button>
+        <button class="filter-btn" onclick="filterReview('incorrect')">Incorrect Only</button>
+        <button class="filter-btn" onclick="filterReview('correct')">Correct Only</button>
+      </div>
+      <div id="reviewContainer"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Jump Navigation Modal -->
+<div class="nav-grid-modal" id="navGridModal">
+  <div class="nav-grid-content">
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+      <h3 style="font-size: 1.1rem; font-weight: 700;">Question Navigator</h3>
+      <button class="btn btn-secondary" style="padding: 4px 8px;" onclick="closeNavGrid()">✕</button>
+    </div>
+    <div class="grid-layout" id="gridLayout"></div>
+  </div>
+</div>
+
+<script>
+// COMPLETE 75-ITEM QUESTION BANK BASED STRICTLY ON UPLOADED CEREAL SCIENCE & TECHNOLOGY MODULES
+const quizData = [
+  {
+    id: 1,
+    type: "two-statement",
+    topic: "Carbohydrate Monosaccharides",
+    statement1: "D-glucose in cereal grains is a six-carbon polyhydroxyaldehyde that serves as the monomeric building block for starch, cellulose, and beta-D-glucans.",
+    statement2: "D-xylose and L-arabinose are six-carbon polyhydroxyketones that serve as the primary energy storage polysaccharides in mature endosperm.",
+    options: [
+      "Statement 1 is true",
+      "Statement 2 is true",
+      "All statements are true",
+      "All statements are false"
+    ],
+    answer: 0, // A
+    explanation: "Statement 1 is TRUE: D-glucose is indeed a six-carbon polyhydroxyaldehyde and the monomeric unit of starch, cellulose, and beta-D-glucans. Statement 2 is FALSE: D-xylose and L-arabinose are five-carbon pentoses (polyhydroxyaldehydes) that form structural polymers (arabinoxylans and dietary fiber) in plant cell walls rather than storage polysaccharides."
+  },
+  {
+    id: 2,
+    type: "two-statement",
+    topic: "Soluble Oligosaccharides",
+    statement1: "Sucrose serves as the primary carbon vehicle carrying photosynthate into the developing grain, reaching its highest concentration in mature dry grains.",
+    statement2: "Among anatomical fractions of rice, the embryo contains a significantly higher proportion of soluble sugars (8.0–12.0%) compared to milled rice (0.22–0.45%).",
+    options: [
+      "Statement 1 is true",
+      "Statement 2 is true",
+      "All statements are true",
+      "All statements are false"
+    ],
+    answer: 1, // B
+    explanation: "Statement 1 is FALSE: While sucrose is the main carbon carrier carrying photosynthate, its concentration is highest in the developing grain BEFORE conversion to structural and storage compounds during maturation. Statement 2 is TRUE: Rice embryo contains 8.0–12.0% soluble sugars on a dry matter basis, whereas milled endosperm contains only 0.22–0.45%."
+  },
+  {
+    id: 3,
+    type: "mcq",
+    topic: "Sweetcorn Saccharides",
+    question: "Which water-soluble, highly branched glucose polymer comprises approximately 12% of sweetcorn grain dry weight due to genetic mutations blocking standard starch synthesis?",
+    options: [
+      "Phytoglycogen",
+      "Arabinoxylan",
+      "Amylose",
+      "Cellulose"
+    ],
+    answer: 0, // A
+    explanation: "Phytoglycogen is a branched polysaccharide derived from sweetcorn that is unusually soluble in water, accounting for ~12% of total sweetcorn grain dry weight."
+  },
+  {
+    id: 4,
+    type: "two-statement",
+    topic: "Starch Molecular Structure",
+    statement1: "Amylose consists of linear unbranched chains of alpha-(1->4)-linked D-glucopyranosyl residues typically containing 1,000 to 4,400 glucose units.",
+    statement2: "Amylopectin branch points are formed through alpha-(1->6) glycosidic bonds occurring every 17 to 26 glucose residues along the main chain.",
+    options: [
+      "Statement 1 is true",
+      "Statement 2 is true",
+      "All statements are true",
+      "All statements are false"
+    ],
+    answer: 2, // C
+    explanation: "Statement 1 is TRUE: Amylose is a linear polymer of alpha-(1->4)-linked D-glucopyranosyl residues (1,000–4,400 per chain). Statement 2 is TRUE: Amylopectin is branched via alpha-(1->6) linkages spaced 17–26 residues apart."
+  },
+  {
+    id: 5,
+    type: "two-statement",
+    topic: "Cell Wall Arabinoxylans",
+    statement1: "Arabinoxylans consist of a xylanopyranosyl backbone with arabinofuranosyl side residues attached along its length.",
+    statement2: "Addition of partially hydrolyzed low molar mass arabinoxylans increases bread crumb hardness and decreases loaf volume on the day of baking.",
+    options: [
+      "Statement 1 is true",
+      "Statement 2 is true",
+      "All statements are true",
+      "All statements are false"
+    ],
+    answer: 0, // A
+    explanation: "Statement 1 is TRUE: Arabinoxylans feature a beta-(1->4)-linked xylanopyranosyl backbone with arabinofuranosyl side groups. Statement 2 is FALSE: Research (Bieniek & Buksa) demonstrates that 2% addition of partially hydrolyzed low molar mass arabinoxylan increases bread volume by 23.7% and DECREASES crumb hardness by 41%."
+  },
+  {
+    id: 6,
+    type: "two-statement",
+    topic: "Starch Granule Morphology",
+    statement1: "Rice starch consists of compound granules containing up to 150 individual angular granuli sized between 2 and 10 micrometers.",
+    statement2: "Wheat starch displays a bimodal granule distribution consisting of large lenticular granules with an equatorial groove and small spherical granules.",
+    options: [
+      "Statement 1 is true",
+      "Statement 2 is true",
+      "All statements are true",
+      "All statements are false"
+    ],
+    answer: 2, // C
+    explanation: "Both statements are TRUE: Rice starch forms compound granules with up to 150 angular granuli (2–10 µm). Wheat starch exhibits a distinct bimodal distribution: large lenticular (15–30 µm) with equatorial grooves and small spherical (1–10 µm) granules."
+  },
+  {
+    id: 7,
+    type: "mcq",
+    topic: "Starch Granule Physical Properties",
+    question: "Which set of physical and optical properties accurately characterizes native cereal starch granules?",
+    options: [
+      "Optically opaque granules with a refractive index of 2.1 that appear yellow in bulk",
+      "Solid, optically clear bodies with a refractive index of ~1.5 that appear white in bulk powder",
+      "Amorphous liquid crystals with a refractive index of 1.0 that absorb all visible light",
+      "Fibrous porous structures with a refractive index of 0.8 that dissolve instantly in cold water"
+    ],
+    answer: 1, // B
+    explanation: "Cereal starch granules are solid, optically clear bodies with a refractive index of approximately 1.5 that appear as a bright white powder in bulk."
+  },
+  {
+    id: 8,
+    type: "two-statement",
+    topic: "Gelatinization Temperature Ranges",
+    statement1: "Wheat starch exhibits a higher gelatinization temperature range (65–73 °C) than rice starch (53–64 °C).",
+    statement2: "Gelatinization involves granule swelling, loss of crystalline order, amylose leaching, and increased susceptibility to alpha-amylase digestion.",
+    options: [
+      "Statement 1 is true",
+      "Statement 2 is true",
+      "All statements are true",
+      "All statements are false"
+    ],
+    answer: 1, // B
+    explanation: "Statement 1 is FALSE: Wheat starch has a LOWER gelatinization temperature range (53–64 °C) compared to rice starch (65–73 °C). Statement 2 is TRUE: Gelatinization is defined by granule swelling, loss of birefringence/crystallinity, amylose leaching, and enhanced enzymatic digestion."
+  },
+  {
+    id: 9,
+    type: "two-statement",
+    topic: "Retrogradation Dynamics",
+    statement1: "Retrogradation occurs when gelatinized amylose and linear regions of amylopectin realign into an ordered crystalline structure upon cooling.",
+    statement2: "Retrogradation increases the enzymatic digestibility of starch in the human small intestine.",
+    options: [
+      "Statement 1 is true",
+      "Statement 2 is true",
+      "All statements are true",
+      "All statements are false"
+    ],
+    answer: 0, // A
+    explanation: "Statement 1 is TRUE: Retrogradation involves realignment of linear starch chains into crystalline order during cooling. Statement 2 is FALSE: Retrogradation converts digestible starch into Type 3 resistant starch, REDUCING enzymatic digestibility."
+  },
+  {
+    id: 10,
+    type: "mcq",
+    topic: "Resistant Starch Classification",
+    question: "Which type of resistant starch is specifically generated when cooked starchy foods (such as boiled potatoes or rice) are cooled, resulting in retrogradation?",
+    options: [
+      "Type 1 Resistant Starch",
+      "Type 2 Resistant Starch",
+      "Type 3 Resistant Starch",
+      "Type 4 Resistant Starch"
+    ],
+    answer: 2, // C
+    explanation: "Type 3 Resistant Starch is formed specifically through thermal processing and cooling, which causes starch retrogradation."
+  },
+  {
+    id: 11,
+    type: "two-statement",
+    topic: "Modified Starches",
+    statement1: "Acid-thinned starches undergo random acid hydrolysis to yield lower hot-paste viscosity while producing firm gels suitable for confectionery.",
+    statement2: "Crossbonded starches (e.g., distarch phosphate) undergo excessive swelling and rapid loss of viscosity under high shear, heat, and acidic conditions.",
+    options: [
+      "Statement 1 is true",
+      "Statement 2 is true",
+      "All statements are true",
+      "All statements are false"
+    ],
+    answer: 0, // A
+    explanation: "Statement 1 is TRUE: Acid treatment randomly hydrolyzes starch molecules, lowering hot viscosity and forming firm candy gels. Statement 2 is FALSE: Crossbonding intentionally REDUCES swelling and PREVENTS loss of viscosity under heat, shear, and acid (used in retort canning)."
+  },
+  {
+    id: 12,
+    type: "mcq",
+    topic: "Rice Cell Wall Composition",
+    question: "Which component makes up 28% of the rice cell wall, contributing gel-like structural properties to the cell matrix?",
+    options: [
+      "Cellulose",
+      "Pectin",
+      "Mannose sugars",
+      "Lignin"
+    ],
+    answer: 1, // B
+    explanation: "Pectin represents 28% of the quantified rice cell wall components, providing gel-like structural properties."
+  },
+  {
+    id: 13,
+    type: "two-statement",
+    topic: "Cell Wall Functional Roles",
+    statement1: "Plant cell walls serve as enzyme gatekeepers by establishing a physical boundary that restricts access by external enzymes.",
+    statement2: "Lignin is a water-soluble hemicellulose that forms the primary storage protein in cereal aleurone layers.",
+    options: [
+      "Statement 1 is true",
+      "Statement 2 is true",
+      "All statements are true",
+      "All statements are false"
+    ],
+    answer: 0, // A
+    explanation: "Statement 1 is TRUE: Cell walls act as physical enzyme gatekeepers. Statement 2 is FALSE: Lignin is a complex non-carbohydrate phenolic polymer acting as a secondary thickening agent in the pericarp, not a water-soluble storage protein."
+  },
+  {
+    id: 14,
+    type: "two-statement",
+    topic: "Dietary Fiber Analytical Methods",
+    statement1: "Acid Detergent Fiber (ADF) measures the combined total of cellulose and lignin using a hot dilute H2SO4 solution of cetyl trimethylammonium bromide.",
+    statement2: "Crude fiber analysis quantitatively recovers 100% of cellulose, lignin, and hemicellulose present in grain samples.",
+    options: [
+      "Statement 1 is true",
+      "Statement 2 is true",
+      "All statements are true",
+      "All statements are false"
+    ],
+    answer: 0, // A
+    explanation: "Statement 1 is TRUE: ADF measures cellulose plus lignin via cetyl trimethylammonium bromide extraction in acid. Statement 2 is FALSE: Crude fiber yields inconsistent results, recovering only 50–80% cellulose, 10–50% lignin, and 20% hemicellulose."
+  },
+  {
+    id: 15,
+    type: "mcq",
+    topic: "FDA Dietary Fiber Definition",
+    question: "Under US FDA regulations, synthetic or isolated non-digestible carbohydrates must contain a minimum of how many monomeric units to qualify as dietary fiber?",
+    options: [
+      "At least 2 monomeric units",
+      "At least 3 monomeric units",
+      "At least 10 monomeric units",
+      "At least 20 monomeric units"
+    ],
+    answer: 1, // B
+    explanation: "The US FDA definition specifies non-digestible soluble and insoluble carbohydrates consisting of 3 or more monomeric units."
+  },
+  {
+    id: 16,
+    type: "two-statement",
+    topic: "Osborne Protein Classification",
+    statement1: "Prolamins are cereal proteins soluble in 70% ethanol, comprising wheat gliadin, rye secalin, barley hordein, and maize zein.",
+    statement2: "Globulins are highly soluble in pure distilled water but completely precipitate upon addition of dilute salt solutions.",
+    options: [
+      "Statement 1 is true",
+      "Statement 2 is true",
+      "All statements are true",
+      "All statements are false"
+    ],
+    answer: 0, // A
+    explanation: "Statement 1 is TRUE: Prolamins are defined by 70% ethanol solubility and include gliadin, secalin, hordein, avenin, zein, and kafirin. Statement 2 is FALSE: Globulins are INSOLUBLE in pure water, SOLUBLE in dilute salt solutions, and precipitate at high salt concentrations."
+  },
+  {
+    id: 17,
+    type: "two-statement",
+    topic: "Wheat Flour Protein Distribution",
+    statement1: "Gluten proteins account for approximately 85% of total wheat flour protein, consisting of polymeric glutenins and monomeric gliadins.",
+    statement2: "Non-gluten proteins in wheat flour consist mainly of albumins (60%) and globulins (40%).",
+    options: [
+      "Statement 1 is true",
+      "Statement 2 is true",
+      "All statements are true",
+      "All statements are false"
+    ],
+    answer: 2, // C
+    explanation: "Both statements are TRUE: Gluten proteins make up ~85% of total wheat protein (glutenins and gliadins), while non-gluten proteins (~15%) consist of albumins (60%) and globulins (40%)."
+  },
+  {
+    id: 18,
+    type: "two-statement",
+    topic: "Gluten Disulfide Bonding",
+    statement1: "Omega-gliadins contain the highest concentration of cysteine residues among wheat proteins, forming extensive intermolecular disulfide bridges.",
+    statement2: "Polymeric glutenins rely on intermolecular disulfide bonds between HMW and LMW subunits to impart elasticity to wheat dough.",
+    options: [
+      "Statement 1 is true",
+      "Statement 2 is true",
+      "All statements are true",
+      "All statements are false"
+    ],
+    answer: 1, // B
+    explanation: "Statement 1 is FALSE: Omega-gliadins lack cysteine residues ENTIRELY and cannot form disulfide bonds. Statement 2 is TRUE: Polymeric glutenins are cross-linked via intermolecular disulfide bonds, providing dough elasticity."
+  },
+  {
+    id: 19,
+    type: "two-statement",
+    topic: "Gliadin to Glutenin Ratio & Rheology",
+    statement1: "A higher gliadin-to-glutenin ratio (Gli/Glu) is negatively correlated with dough development time (r = -0.988) and dough stability (r = -0.940).",
+    statement2: "Gliadins contribute primarily to dough extensibility and viscosity, whereas glutenins provide elasticity and strength.",
+    options: [
+      "Statement 1 is true",
+      "Statement 2 is true",
+      "All statements are true",
+      "All statements are false"
+    ],
+    answer: 2, // C
+    explanation: "Both statements are TRUE: Research (Barak et al., 2012) proves high Gli/Glu ratios negatively correlate with dough development time and stability. Gliadins provide viscosity/extensibility while glutenins provide elasticity."
+  },
+  {
+    id: 20,
+    type: "mcq",
+    topic: "Limiting Amino Acid in Cereals",
+    question: "Which essential amino acid is universally recognized as the primary limiting amino acid across cereal grains?",
+    options: [
+      "Methionine",
+      "Tryptophan",
+      "Lysine",
+      "Threonine"
+    ],
+    answer: 2, // C
+    explanation: "Lysine is the primary limiting essential amino acid in cereal grains, restricting biological protein efficiency unless complemented by legumes or animal protein."
+  },
+  {
+    id: 21,
+    type: "two-statement",
+    topic: "Enzymes in Cereals",
+    statement1: "Phytase catalyzes the hydrolytic breakdown of phytic acid into inositol and free orthophosphate.",
+    statement2: "A high level of enzyme activity in mature, dry cereal grains indicates optimal grain quality and long storage stability.",
+    options: [
+      "Statement 1 is true",
+      "Statement 2 is true",
+      "All statements are true",
+      "All statements are false"
+    ],
+    answer: 0, // A
+    explanation: "Statement 1 is TRUE: Phytase cleaves phytic acid into inositol and orthophosphate. Statement 2 is FALSE: In mature grains, high enzyme activity signals GRAIN DAMAGE or pre-harvest sprouting."
+  },
+  {
+    id: 22,
+    type: "two-statement",
+    topic: "Cereal Fatty Acid Profiles",
+    statement1: "Linoleic acid (18:2) is quantitatively the predominant fatty acid in the lipids of wheat, maize, rye, and barley.",
+    statement2: "Palmitic acid (16:0) is a tri-unsaturated 18-carbon fatty acid that oxidizes rapidly upon exposure to air.",
+    options: [
+      "Statement 1 is true",
+      "Statement 2 is true",
+      "All statements are true",
+      "All statements are false"
+    ],
+    answer: 0, // A
+    explanation: "Statement 1 is TRUE: Linoleic acid (18:2) dominates cereal fatty acid profiles (e.g., wheat 56.3%, rye 61.0%, maize 49.8%). Statement 2 is FALSE: Palmitic acid (16:0) is a fully SATURATED 16-carbon fatty acid."
+  },
+  {
+    id: 23,
+    type: "two-statement",
+    topic: "Non-Starch Lipid Classes",
+    statement1: "Neutral lipids constitute the most abundant non-starch lipid class across all cereal grains.",
+    statement2: "Maize and sorghum contain higher proportions of glycolipids and phospholipids than wheat and rye.",
+    options: [
+      "Statement 1 is true",
+      "Statement 2 is true",
+      "All statements are true",
+      "All statements are false"
+    ],
+    answer: 0, // A
+    explanation: "Statement 1 is TRUE: Neutral lipids represent the largest non-starch lipid fraction in all cereals. Statement 2 is FALSE: Wheat, rye, and triticale are RELATIVELY RICHER in glycolipids and phospholipids than maize and sorghum."
+  },
+  {
+    id: 24,
+    type: "mcq",
+    topic: "Mineral Chemical Forms",
+    question: "In wheat grain, phosphorus is carried largely in which specific chemical phosphate salt forms?",
+    options: [
+      "Phosphatidylcholine and lecithin",
+      "KH2PO4 and K2HPO4",
+      "Calcium phosphate and zinc sulfate",
+      "Magnesium pyrophosphate and sodium chloride"
+    ],
+    answer: 1, // B
+    explanation: "In wheat, phosphorus occurs largely as potassium dihydrogen phosphate (KH2PO4) and dipotassium hydrogen phosphate (K2HPO4)."
+  },
+  {
+    id: 25,
+    type: "two-statement",
+    topic: "Vitamin Localization",
+    statement1: "Thiamin (Vitamin B1) is heavily concentrated within the scutellum of the cereal embryo.",
+    statement2: "Niacin and pyridoxin (Vitamin B6) are located primarily in the starchy endosperm and are preserved during grain milling.",
+    options: [
+      "Statement 1 is true",
+      "Statement 2 is true",
+      "All statements are true",
+      "All statements are false"
+    ],
+    answer: 0, // A
+    explanation: "Statement 1 is TRUE: Thiamin concentrates in the scutellum of the embryo. Statement 2 is FALSE: Niacin and B6 are concentrated in the ALEURONE layer, which is removed during milling."
+  },
+  {
+    id: 26,
+    type: "mcq",
+    topic: "Missing Vitamins in Cereals",
+    question: "Which trio of vitamins is completely absent from all unsprouted cereal grains (with provitamin A occurring only as an exception in yellow maize)?",
+    options: [
+      "Thiamin, Riboflavin, and Niacin",
+      "Vitamin A, Vitamin B12, and Vitamin C",
+      "Vitamin E, Pantothenic Acid, and Biotin",
+      "Pyridoxin, Folic Acid, and Vitamin K"
+    ],
+    answer: 1, // B
+    explanation: "Cereals completely lack Vitamin A (except yellow maize provitamin A), Vitamin B12, and Vitamin C."
+  },
+  {
+    id: 27,
+    type: "two-statement",
+    topic: "Phytic Acid Morphological Distribution",
+    statement1: "In maize grain, 87% to 95% of total phytic acid is concentrated within the embryo fraction.",
+    statement2: "In wheat grain, phytic acid is located primarily within the starchy endosperm.",
+    options: [
+      "Statement 1 is true",
+      "Statement 2 is true",
+      "All statements are true",
+      "All statements are false"
+    ],
+    answer: 0, // A
+    explanation: "Statement 1 is TRUE: Maize phytate resides overwhelmingly in the embryo (87–95%). Statement 2 is FALSE: Wheat phytate is located predominantly in the ALEURONE layer (70–86%), with only 1–2% in the endosperm."
+  },
+  {
+    id: 28,
+    type: "two-statement",
+    topic: "Tannin Antinutritional Mechanisms",
+    statement1: "Tannins reduce protein digestibility by forming phenol-protein complexes that prevent enzymatic cleavage.",
+    statement2: "Tannins are aliphatic fatty acids that increase starch gelatinization rates in sorghum doughs.",
+    options: [
+      "Statement 1 is true",
+      "Statement 2 is true",
+      "All statements are true",
+      "All statements are false"
+    ],
+    answer: 0, // A
+    explanation: "Statement 1 is TRUE: Tannins complex with proteins before digestive enzymes can break them down. Statement 2 is FALSE: Tannins are polyphenolic flavonoids that impair protein digestion and enzyme activity."
+  },
+  {
+    id: 29,
+    type: "mcq",
+    topic: "Cereal Allergies & Autoimmunity",
+    question: "Which cereal protein component triggers the autoimmune destruction of intestinal villi characteristic of Coeliac disease?",
+    options: [
+      "Water-soluble albumins",
+      "Salt-soluble globulins",
+      "Monomeric gliadins and gliadin-like prolamins",
+      "Acid-soluble glutelins"
+    ],
+    answer: 2, // C
+    explanation: "Coeliac disease (gluten-sensitive enteropathy) is induced specifically by monomeric gliadin and gliadin-like prolamin proteins."
+  },
+  {
+    id: 30,
+    type: "two-statement",
+    topic: "Mycotoxins and Fungal Sources",
+    statement1: "Aflatoxins are produced primarily by Aspergillus flavus and Aspergillus parasiticus.",
+    statement2: "Ergotism is a gangrenous disease caused by consuming cereal grains (primarily rye) infected with Claviceps purpurea.",
+    options: [
+      "Statement 1 is true",
+      "Statement 2 is true",
+      "All statements are true",
+      "All statements are false"
+    ],
+    answer: 2, // C
+    explanation: "Both statements are TRUE: Aflatoxins originate from Aspergillus flavus/parasiticus. Ergotism is caused by Claviceps purpurea infection in rye."
+  },
+  {
+    id: 31,
+    type: "two-statement",
+    topic: "Refinement Micronutrient Loss",
+    statement1: "Milling and polishing whole rice to white rice removes approximately 80% of its original thiamin (Vitamin B1) content.",
+    statement2: "The removed bran and germ layers consist purely of crystalline starch and lack vitamins or minerals.",
+    options: [
+      "Statement 1 is true",
+      "Statement 2 is true",
+      "All statements are true",
+      "All statements are false"
+    ],
+    answer: 0, // A
+    explanation: "Statement 1 is TRUE: Rice milling strips away ~80% of Vitamin B1. Statement 2 is FALSE: The bran and germ layers contain the majority of B-vitamins, minerals, dietary fiber, and lipids."
+  },
+  {
+    id: 32,
+    type: "two-statement",
+    topic: "Cooking Losses of B-Vitamins",
+    statement1: "Cooking milled rice in excess water causes higher losses of thiamin (47%), riboflavin (45%), and niacin (43%) than absorbable water cooking.",
+    statement2: "Using a double boiler to cook milled rice results in a 47% loss of niacin.",
+    options: [
+      "Statement 1 is true",
+      "Statement 2 is true",
+      "All statements are true",
+      "All statements are false"
+    ],
+    answer: 0, // A
+    explanation: "Statement 1 is TRUE: Cooking in excess water causes severe vitamin leaching. Statement 2 is FALSE: Double boiler cooking minimizes nutrient leaching, losing only 3% of niacin."
+  },
+  {
+    id: 33,
+    type: "mcq",
+    topic: "Maillard Browning Impact",
+    question: "What is the primary mechanism by which severe Maillard browning reduces the biological value of cereal proteins?",
+    options: [
+      "Racemization of L-amino acids into toxic D-amino acids",
+      "Sugar-protein cross-linking that physically obstructs proteolytic enzymes from digesting essential amino acids like lysine",
+      "Volatilization of glutamic acid into atmospheric nitrogen gas",
+      "Precipitation of insoluble calcium phytate crystals"
+    ],
+    answer: 1, // B
+    explanation: "Maillard reactions create sugar-protein cross-links that block proteolytic enzymes from cleaving amino acid bonds, making lysine and other amino acids undigestible."
+  },
+  {
+    id: 34,
+    type: "two-statement",
+    topic: "Maize Botanical Characteristics",
+    statement1: "Maize (Zea mays) is a C4 annual grass belonging to the tribe Maydeae of the family Poaceae with a somatic chromosome number of 2n = 20.",
+    statement2: "Wild teosinte possesses a single robust stalk bearing a single massive cob enclosed in leafy husks.",
+    options: [
+      "Statement 1 is true",
+      "Statement 2 is true",
+      "All statements are true",
+      "All statements are false"
+    ],
+    answer: 0, // A
+    explanation: "Statement 1 is TRUE: Maize is a C4 grass, 2n=20, tribe Maydeae. Statement 2 is FALSE: Wild teosinte has MULTIPLE tillers and two-rowed ears; single robust stalks bearing large cobs developed through domestication."
+  },
+  {
+    id: 35,
+    type: "two-statement",
+    topic: "Maize Commercial Classes",
+    statement1: "Dent corn (Indentata group) accounts for ~73% of world maize production and features disproportionate contraction of its floury core/crown during ripening.",
+    statement2: "Waxy corn endosperm starch consists of 70% linear amylose and 30% amylopectin.",
+    options: [
+      "Statement 1 is true",
+      "Statement 2 is true",
+      "All statements are true",
+      "All statements are false"
+    ],
+    answer: 0, // A
+    explanation: "Statement 1 is TRUE: Dent corn (73% global share) contracts unequally upon drying, forming a distal indentation. Statement 2 is FALSE: Waxy corn starch consists 100% (or near 100%) of branched amylopectin."
+  },
+  {
+    id: 36,
+    type: "mcq",
+    topic: "Maize Niacin Bioavailability",
+    question: "Why is niacin in raw, untreated maize poorly absorbed in the human gastrointestinal tract?",
+    options: [
+      "Niacin is oxidized by stomach hydrochloric acid",
+      "Niacin is chemically bound in complex form (niacytin) and requires alkali treatment (nixtamalization) to release free nicotinic acid",
+      "Niacin is converted into condensed tannins upon harvesting",
+      "Niacin is bound exclusively to water-soluble beta-glucans"
+    ],
+    answer: 1, // B
+    explanation: "Niacin in maize is chemically bound (niacytin). Traditional nixtamalization (alkali/limewater treatment) liberates free, bioavailable niacin."
+  },
+  {
+    id: 37,
+    type: "two-statement",
+    topic: "Opaque-2 vs Quality Protein Maize (QPM)",
+    statement1: "Original Opaque-2 mutant maize was widely accepted by commercial farmers due to its hard endosperm and high field yields.",
+    statement2: "Quality Protein Maize (QPM) developed by CIMMYT combines high lysine/tryptophan levels with hard endosperm texture and high yield.",
+    options: [
+      "Statement 1 is true",
+      "Statement 2 is true",
+      "All statements are true",
+      "All statements are false"
+    ],
+    answer: 1, // B
+    explanation: "Statement 1 is FALSE: Original Opaque-2 was rejected due to soft endosperm, poor taste, low yield, and disease susceptibility. Statement 2 is TRUE: QPM incorporated endosperm modifier genes to restore hardness and yield while maintaining high lysine and tryptophan."
+  },
+  {
+    id: 38,
+    type: "two-statement",
+    topic: "Cultivated Rice Species & Subspecies",
+    statement1: "Indica rice varieties feature long, narrow grains that cook fluffy and separate, whereas Japonica varieties have short, broad grains that become sticky.",
+    statement2: "North American wild rice (Zizania palustris) belongs to the genus Oryza.",
+    options: [
+      "Statement 1 is true",
+      "Statement 2 is true",
+      "All statements are true",
+      "All statements are false"
+    ],
+    answer: 0, // A
+    explanation: "Statement 1 is TRUE: Indica grains are long/fluffy; Japonica grains are short/sticky. Statement 2 is FALSE: North American wild rice belongs to a DIFFERENT genus (Zizania), not Oryza."
+  },
+  {
+    id: 39,
+    type: "two-statement",
+    topic: "Rice Cultivation Systems",
+    statement1: "Deep-water rice ecosystems adapt to seasonal river flooding through rapid stem elongation in water depths up to 1.5 meters.",
+    statement2: "Ratooning is the practice of planting two distinct cereal crops simultaneously in alternate field rows.",
+    options: [
+      "Statement 1 is true",
+      "Statement 2 is true",
+      "All statements are true",
+      "All statements are false"
+    ],
+    answer: 0, // A
+    explanation: "Statement 1 is TRUE: Deep-water floating rice elongates rapidly in floods up to 1.5 m. Statement 2 is FALSE: Ratooning is the production of a second grain crop from new tillers arising from stubble left in the ground after harvest."
+  },
+  {
+    id: 40,
+    type: "mcq",
+    topic: "Rice Viral Pathogens & Vectors",
+    question: "Rice tungro disease is a destructive viral infection transmitted across fields by which insect vector?",
+    options: [
+      "Brown planthopper (Nilaparvata lugens)",
+      "Green leafhoppers (Nephotettix spp. and Recilia dorsalis)",
+      "Yellow stem borer (Scirpophaga incertulas)",
+      "Golden apple snail (Pomacea canaliculata)"
+    ],
+    answer: 1, // B
+    explanation: "Rice tungro virus is transmitted specifically by leafhoppers (Nephotettix spp. and Recilia dorsalis)."
+  },
+  {
+    id: 41,
+    type: "two-statement",
+    topic: "Wheat Ploidy and Evolution",
+    statement1: "Bread wheat (Triticum aestivum) is a hexaploid species (AABBDD) resulting from accidental hybridization between tetraploid wheat and Aegilops tauschii.",
+    statement2: "Durum wheat (Triticum turgidum ssp. durum) is a hexaploid wheat used for cake making.",
+    options: [
+      "Statement 1 is true",
+      "Statement 2 is true",
+      "All statements are true",
+      "All statements are false"
+    ],
+    answer: 0, // A
+    explanation: "Statement 1 is TRUE: Hexaploid bread wheat (AABBDD) arose from hybridization between tetraploid emmer/durum wheat (AABB) and Aegilops tauschii (DD). Statement 2 is FALSE: Durum wheat is TETRAPLOID (AABB) and used primarily for semolina/pasta."
+  },
+  {
+    id: 42,
+    type: "two-statement",
+    topic: "Wheat Endosperm Texture",
+    statement1: "Hard wheat produces gritty flour particles that detach cleanly from bran during milling due to fracturing along cell boundaries.",
+    statement2: "Soft wheat flours consist of uniform spherical particles that sift easily without clogging sieve apertures.",
+    options: [
+      "Statement 1 is true",
+      "Statement 2 is true",
+      "All statements are true",
+      "All statements are false"
+    ],
+    answer: 0, // A
+    explanation: "Statement 1 is TRUE: Hard wheat endosperm fractures cleanly along cell boundaries yielding gritty flour. Statement 2 is FALSE: Soft wheat yields irregular, flattened particles that entangle and sift with difficulty, clogging sieve apertures."
+  },
+  {
+    id: 43,
+    type: "two-statement",
+    topic: "Spring Wheat vs Winter Wheat",
+    statement1: "Spring wheat rapidly matures in warm late summer, producing high-protein grain with a vitreous endosperm.",
+    statement2: "Winter wheat matures slower, producing higher grain yields with lower nitrogen/protein content ideal for biscuits and cakes.",
+    options: [
+      "Statement 1 is true",
+      "Statement 2 is true",
+      "All statements are true",
+      "All statements are false"
+    ],
+    answer: 2, // C
+    explanation: "Both statements are TRUE: Spring wheat matures rapidly into high-protein vitreous grain. Winter wheat matures slower, producing higher yield but lower nitrogen/protein flour suited for biscuits/cakes."
+  },
+  {
+    id: 44,
+    type: "mcq",
+    topic: "Wheat Weeds",
+    question: "Which aggressive weed species is explicitly recognized as a major agronomic threat to wheat fields?",
+    options: [
+      "Phalaris minor (Littleseed canarygrass)",
+      "Sclerospora graminicola",
+      "Helminthosporium maydis",
+      "Colletotrichum sublineolum"
+    ],
+    answer: 0, // A
+    explanation: "Phalaris minor (Littleseed canarygrass) and Alopecurus myosuroides (Blackgrass) are major problematic weeds in wheat crops."
+  },
+  {
+    id: 45,
+    type: "two-statement",
+    topic: "Barley Taxonomy and History",
+    statement1: "Six-rowed barley represents the original wild ancestor of Hordeum vulgare, while two-rowed barley arose much later.",
+    statement2: "Roman gladiators were historically referred to as 'hordearii' due to their standard dietary reliance on barley.",
+    options: [
+      "Statement 1 is true",
+      "Statement 2 is true",
+      "All statements are true",
+      "All statements are false"
+    ],
+    answer: 1, // B
+    explanation: "Statement 1 is FALSE: Two-rowed barley is the original cultivated form; six-rowed barley arose ~9,000 years ago via mutation. Statement 2 is TRUE: Gladiators were termed 'hordearii' (barley-eaters)."
+  },
+  {
+    id: 46,
+    type: "two-statement",
+    topic: "Barley Malting vs Feed Standards",
+    statement1: "The benchmark quality for malting barley requires two-rowed, hulled, low-protein winter barley varieties.",
+    statement2: "Hull-less barleys are strictly preferred for commercial malting because intact hulls interfere with mash filtration.",
+    options: [
+      "Statement 1 is true",
+      "Statement 2 is true",
+      "All statements are true",
+      "All statements are false"
+    ],
+    answer: 0, // A
+    explanation: "Statement 1 is TRUE: Two-rowed, hulled, low-protein winter barleys represent the malting benchmark. Statement 2 is FALSE: Intact hulls ARE PREFERRED in malting because they form a vital natural filter bed during mash lautering."
+  },
+  {
+    id: 47,
+    type: "mcq",
+    topic: "Barley Viral Pathogens",
+    question: "Which barley virus is transmitted predominantly through infected seeds rather than aphid vectors?",
+    options: [
+      "Barley Yellow Dwarf Virus (BYDV)",
+      "Barley Stripe Mosaic Virus (BSMV)",
+      "Rice Tungro Virus",
+      "Maize Dwarf Mosaic Virus"
+    ],
+    answer: 1, // B
+    explanation: "Barley Stripe Mosaic Virus (BSMV) is spread mainly by infected seed, whereas BYDV is spread by aphids."
+  },
+  {
+    id: 48,
+    type: "two-statement",
+    topic: "Sorghum Botany & Physiology",
+    statement1: "Sorghum bicolor utilizes a C4 photosynthetic pathway, conferring superior water- and nitrogen-use efficiency under heat and drought.",
+    statement2: "A single sorghum panicle is a compact spike carrying no more than 10 to 12 seeds.",
+    options: [
+      "Statement 1 is true",
+      "Statement 2 is true",
+      "All statements are true",
+      "All statements are false"
+    ],
+    answer: 0, // A
+    explanation: "Statement 1 is TRUE: Sorghum is a highly efficient C4 grass. Statement 2 is FALSE: Sorghum bears loose panicles containing up to 200 seeds per panicle."
+  },
+  {
+    id: 49,
+    type: "two-statement",
+    topic: "Sorghum Tannins and Agronomy",
+    statement1: "Condensed tannins protect bird-resistant sorghum grains from bird feeding but decrease protein digestibility and malting enzyme activity.",
+    statement2: "Broom corn sorghums are cultivated primarily for high stem sugar content used in ethanol production.",
+    options: [
+      "Statement 1 is true",
+      "Statement 2 is true",
+      "All statements are true",
+      "All statements are false"
+    ],
+    answer: 0, // A
+    explanation: "Statement 1 is TRUE: Condensed tannins offer bird resistance but impair protein digestion and brewing enzymes. Statement 2 is FALSE: Broom corns have long panicle branches used for brooms/brushes; Sweet sorghums are grown for stem sugar."
+  },
+  {
+    id: 50,
+    type: "two-statement",
+    topic: "Sorghum Environmental Resilience",
+    statement1: "Sorghum plants can enter dormancy during severe drought and revive upon subsequent rainfall.",
+    statement2: "Sorghum anthracnose is caused by Colletotrichum sublineolum and can kill susceptible plants.",
+    options: [
+      "Statement 1 is true",
+      "Statement 2 is true",
+      "All statements are true",
+      "All statements are false"
+    ],
+    answer: 2, // C
+    explanation: "Both statements are TRUE: Sorghum dormant survival during drought is a key trait, and Colletotrichum sublineolum causes lethal anthracnose."
+  },
+  {
+    id: 51,
+    type: "mcq",
+    topic: "Maize Sugar Distribution",
+    question: "Which anatomical part of the maize kernel contains the highest percentage concentration of free soluble sugars (10.0–12.5% of dry matter)?",
+    options: [
+      "Pericarp",
+      "Endosperm",
+      "Tip cap",
+      "Embryo"
+    ],
+    answer: 3, // D
+    explanation: "Table 4.2 shows the maize embryo contains 10.0–12.5% free sugars on a dry matter basis, compared to 0.5–0.8% in endosperm."
+  },
+  {
+    id: 52,
+    type: "two-statement",
+    topic: "Waxy vs Amylotype Maize Starches",
+    statement1: "Waxy maize cultivars contain near-total absence of amylose, producing starches composed of up to 98% amylopectin.",
+    statement2: "High-amylose 'amylotype' maize starches contain a maximum of 10% amylose.",
+    options: [
+      "Statement 1 is true",
+      "Statement 2 is true",
+      "All statements are true",
+      "All statements are false"
+    ],
+    answer: 0, // A
+    explanation: "Statement 1 is TRUE: Waxy maize is prized for pure branched amylopectin (~98%). Statement 2 is FALSE: Amylotypes contain UP TO 70% amylose."
+  },
+  {
+    id: 53,
+    type: "two-statement",
+    topic: "Cross-linked Arabinoxylan Application",
+    statement1: "In sourdough bread baking, adding 2% cross-linked arabinoxylans produces the highest increase in flour water absorption (9.8%).",
+    statement2: "Cross-linked arabinoxylans cause rapid moisture loss in bread crumb during storage.",
+    options: [
+      "Statement 1 is true",
+      "Statement 2 is true",
+      "All statements are true",
+      "All statements are false"
+    ],
+    answer: 0, // A
+    explanation: "Statement 1 is TRUE: 2% cross-linked AX increases water absorption by 9.8%. Statement 2 is FALSE: Cross-linked AX significantly INCREASES crumb moisture retention during storage."
+  },
+  {
+    id: 54,
+    type: "mcq",
+    topic: "Gelatinization Structural Transformations",
+    question: "As native starch granules are heated in excess water past their gelatinization temperature, what cascade of changes occurs?",
+    options: [
+      "Granule shrinkage, decreased water permeability, and complete enzyme resistance",
+      "Granule swelling, loss of crystalline order, amylose leaching, and increased enzyme susceptibility",
+      "Direct conversion into insoluble crystalline cellulose microfibrils",
+      "Precipitation into water-insoluble lipid complexes"
+    ],
+    answer: 1, // B
+    explanation: "Gelatinization triggers swelling, loss of crystalline order, water/dye absorption, amylose leaching, viscosity elevation, and increased enzymatic digestibility."
+  },
+  {
+    id: 55,
+    type: "two-statement",
+    topic: "Modified Starches - Acetate and Oxidative Derivatives",
+    statement1: "Acetate derivative starches (treated with acetic anhydride) exhibit lower gelatinization temperatures and reduced cold-paste retrogradation.",
+    statement2: "Oxidative starches (treated with sodium hypochlorite) yield opaque, highly viscous pastes that gel rapidly.",
+    options: [
+      "Statement 1 is true",
+      "Statement 2 is true",
+      "All statements are true",
+      "All statements are false"
+    ],
+    answer: 0, // A
+    explanation: "Statement 1 is TRUE: Acetylation reduces gel temp, increases hot peak viscosity, and prevents retrogradation. Statement 2 is FALSE: Oxidative starches yield CLEAR pastes with REDUCED viscosity, gelling, and retrogradation."
+  },
+  {
+    id: 56,
+    type: "mcq",
+    topic: "Neutral Detergent Fiber Reagents",
+    question: "Neutral Detergent Fiber (NDF) analysis utilizes which specific chemical solution to separate digestible plant cell contents from fermentable cell wall fiber?",
+    options: [
+      "Cetyl trimethylammonium bromide in H2SO4",
+      "Sodium lauryl sulphate (SDS) in hot neutral solution",
+      "Acetic anhydride in sodium hydroxide",
+      "Sodium hypochlorite in hydrochloric acid"
+    ],
+    answer: 1, // B
+    explanation: "NDF uses a hot neutral solution of SDS (sodium lauryl sulphate) to separate cell contents from cell wall dry matter."
+  },
+  {
+    id: 57,
+    type: "two-statement",
+    topic: "Cereal Amino Acid Content",
+    statement1: "Glutamic acid is quantitatively the most abundant amino acid in cereal grains, exceeding 30 g / 16g N in wheat.",
+    statement2: "Sorghum protein contains lower leucine concentration than rice protein.",
+    options: [
+      "Statement 1 is true",
+      "Statement 2 is true",
+      "All statements are true",
+      "All statements are false"
+    ],
+    answer: 0, // A
+    explanation: "Statement 1 is TRUE: Glutamic acid is highest in all cereals (33.1 g/16g N in wheat). Statement 2 is FALSE: Sorghum is exceptionally high in leucine (13.6 g/16g N), whereas rice contains 8.0 g/16g N."
+  },
+  {
+    id: 58,
+    type: "two-statement",
+    topic: "Amylase Hydrolysis Mechanisms",
+    statement1: "Alpha-amylase acts as an endo-enzyme randomly cleaving internal alpha-(1->4) glucan bonds within starch.",
+    statement2: "Beta-amylase is an exo-enzyme that cleaves maltose units sequentially from non-reducing ends.",
+    options: [
+      "Statement 1 is true",
+      "Statement 2 is true",
+      "All statements are true",
+      "All statements are false"
+    ],
+    answer: 2, // C
+    explanation: "Both statements are TRUE: Alpha-amylase is an endo-enzyme cleaving internal alpha-1,4 bonds; Beta-amylase is an exo-enzyme cleaving maltose dimers from non-reducing ends."
+  },
+  {
+    id: 59,
+    type: "mcq",
+    topic: "Barley Processing & Beta-Glucanase",
+    question: "What industrial processing defect occurs in brewing if barley beta-glucanase fails to break down beta-glucan polymers during malting?",
+    options: [
+      "Excessive alcohol loss during mashing",
+      "High wort and mash viscosity leading to slow filtration and beer haze",
+      "Complete destruction of starch gelatinization",
+      "Rapid rancidity of lipid compounds"
+    ],
+    answer: 1, // B
+    explanation: "Unbroken beta-glucans dramatically increase mash viscosity, causing filtration blockages and permanent haze in finished beer."
+  },
+  {
+    id: 60,
+    type: "two-statement",
+    topic: "Wheat Germ Lipid Composition",
+    statement1: "Wheat germ lipids are rich in polyunsaturated fatty acids, with linoleic acid accounting for ~57% of total fatty acids.",
+    statement2: "Stearic acid (18:0) is a tri-unsaturated fatty acid.",
+    options: [
+      "Statement 1 is true",
+      "Statement 2 is true",
+      "All statements are true",
+      "All statements are false"
+    ],
+    answer: 0, // A
+    explanation: "Statement 1 is TRUE: Wheat germ lipid contains 57.0% linoleic acid. Statement 2 is FALSE: Stearic acid (18:0) is a fully SATURATED fatty acid with zero double bonds."
+  },
+  {
+    id: 61,
+    type: "two-statement",
+    topic: "Cereal Minerals - Potassium and Silicon",
+    statement1: "Potassium is quantitatively the primary mineral element present in wheat, barley, and rye grains.",
+    statement2: "Whole paddy rice contains lower silicon content (10 mg/100g) than polished white rice (2047 mg/100g).",
+    options: [
+      "Statement 1 is true",
+      "Statement 2 is true",
+      "All statements are true",
+      "All statements are false"
+    ],
+    answer: 0, // A
+    explanation: "Statement 1 is TRUE: Potassium is the most abundant cation (e.g., wheat 441 mg, barley 534 mg, rye 524 mg/100g). Statement 2 is FALSE: Paddy rice contains 2047 mg/100g silicon due to its hull; white rice contains only 10 mg/100g."
+  },
+  {
+    id: 62,
+    type: "mcq",
+    topic: "Vitamin E Localization",
+    question: "Within which anatomical component of the cereal grain are Vitamin E compounds (tocopherols and tocotrienols) predominantly concentrated?",
+    options: [
+      "Pericarp",
+      "Aleurone layer",
+      "Embryo",
+      "Starchy endosperm"
+    ],
+    answer: 2, // C
+    explanation: "Tocopherols and tocotrienols (Vitamin E) are localized almost exclusively within the cereal embryo."
+  },
+  {
+    id: 63,
+    type: "two-statement",
+    topic: "Phytic Acid Mineral Binding",
+    statement1: "Phytic acid inhibits intestinal mineral absorption by forming insoluble chelates with polyvalent cations like Fe, Ca, and Zn.",
+    statement2: "Phytic acid is a nitrogenous vitamin required for enzyme activation.",
+    options: [
+      "Statement 1 is true",
+      "Statement 2 is true",
+      "All statements are true",
+      "All statements are false"
+    ],
+    answer: 0, // A
+    explanation: "Statement 1 is TRUE: Phytic acid (IP6) chelates multivalent cations, reducing mineral bioaccessibility. Statement 2 is FALSE: Phytic acid is an antinutritional inositol hexaphosphate compound, not a vitamin."
+  },
+  {
+    id: 64,
+    type: "mcq",
+    topic: "Occupational Cereal Allergies",
+    question: "What is recognized as the most prevalent occupational grain allergy among bakery and mill workers, triggered via inhalation of grain dusts?",
+    options: [
+      "Tropical sprue",
+      "Baker's Asthma & Rhinitis",
+      "Gangrenous ergotism",
+      "Idiopathic steatorrhea"
+    ],
+    answer: 1, // B
+    explanation: "Baker's Asthma & Rhinitis represent the most prevalent grain allergies, caused by inhaling grain dusts during milling and baking."
+  },
+  {
+    id: 65,
+    type: "two-statement",
+    topic: "Fumonisin and Ochratoxin Mycotoxins",
+    statement1: "Fumonisins are toxic secondary metabolites produced primarily by Fusarium verticillioides and Fusarium proliferatum.",
+    statement2: "Ochratoxin A is synthesized exclusively by Claviceps purpurea.",
+    options: [
+      "Statement 1 is true",
+      "Statement 2 is true",
+      "All statements are true",
+      "All statements are false"
+    ],
+    answer: 0, // A
+    explanation: "Statement 1 is TRUE: Fumonisins originate from Fusarium verticillioides/proliferatum. Statement 2 is FALSE: Ochratoxin A is produced by Aspergillus species and Penicillium verrucosum (Claviceps purpurea causes ergotism)."
+  },
+  {
+    id: 66,
+    type: "two-statement",
+    topic: "Flint vs Sweet Corn Physiology",
+    statement1: "Flint corn (Indurata group) features a hard endosperm and represents ~14% of global maize production.",
+    statement2: "Sweet corn retains elevated sucrose levels because recessive mutations block normal conversion of sugar to starch.",
+    options: [
+      "Statement 1 is true",
+      "Statement 2 is true",
+      "All statements are true",
+      "All statements are false"
+    ],
+    answer: 2, // C
+    explanation: "Both statements are TRUE: Flint corn (14% global share) has a hard endosperm. Sweet corn retains high sugar because recessive mutations block sugar-to-starch conversion."
+  },
+  {
+    id: 67,
+    type: "two-statement",
+    topic: "Maize Agronomy and Physiology",
+    statement1: "Kernel filling in maize relies primarily on photoassimilates synthesized by the 5 to 6 leaves situated directly above the cob.",
+    statement2: "Maize seed germination occurs optimally at temperatures below 4 °C.",
+    options: [
+      "Statement 1 is true",
+      "Statement 2 is true",
+      "All statements are true",
+      "All statements are false"
+    ],
+    answer: 0, // A
+    explanation: "Statement 1 is TRUE: Grain filling is driven by the 5–6 leaves above the cob. Statement 2 is FALSE: Optimum germination temperature for maize is 18–20 °C (growth stops below 15 °C)."
+  },
+  {
+    id: 68,
+    type: "mcq",
+    topic: "Maize Pathogens",
+    question: "Which specific fungal pathogen is the causal agent of maize smut, forming characteristic tumor-like galls on cobs and tassels?",
+    options: [
+      "Sclerospora graminicola",
+      "Ustilago maydis",
+      "Helminthosporium turcicum",
+      "Pseudomonas avenae"
+    ],
+    answer: 1, // B
+    explanation: "Ustilago maydis is the fungus responsible for maize smut."
+  },
+  {
+    id: 69,
+    type: "two-statement",
+    topic: "Ancient Wheats and Bread Wheat Ancestry",
+    statement1: "Einkorn (Triticum monococcum) and Emmer (Triticum turgidum ssp. dicoccum) represent early hulled cultivated wheats.",
+    statement2: "The D-genome of modern hexaploid bread wheat was contributed by hybridization with Aegilops tauschii.",
+    options: [
+      "Statement 1 is true",
+      "Statement 2 is true",
+      "All statements are true",
+      "All statements are false"
+    ],
+    answer: 2, // C
+    explanation: "Both statements are TRUE: Einkorn and emmer are early hulled wheats. Aegilops tauschii provided the D-genome in hexaploid bread wheat."
+  },
+  {
+    id: 70,
+    type: "two-statement",
+    topic: "Wheat Flour Strength",
+    statement1: "Strong wheat flour contains high protein content that forms an elastic gluten network ideal for leavened bread applications.",
+    statement2: "Weak wheat flours possess high protein concentrations that form rigid elastic gluten ideal for biscuit manufacturing.",
+    options: [
+      "Statement 1 is true",
+      "Statement 2 is true",
+      "All statements are true",
+      "All statements are false"
+    ],
+    answer: 0, // A
+    explanation: "Statement 1 is TRUE: Strong flour has high protein yielding elastic gluten for bread. Statement 2 is FALSE: Weak flours have LOWER protein content, producing less elastic gluten ideal for tender biscuits and pastries."
+  },
+  {
+    id: 71,
+    type: "mcq",
+    topic: "Barley Mutation Timeline",
+    question: "Approximately how many years ago did six-rowed barley arise from a mutation in cultivated two-rowed barley?",
+    options: [
+      "1,000 years ago",
+      "3,000 years ago",
+      "9,000 years ago",
+      "25,000 years ago"
+    ],
+    answer: 2, // C
+    explanation: "Six-rowed barley arose approximately 9,000 years ago from a mutation in cultivated two-rowed barley."
+  },
+  {
+    id: 72,
+    type: "two-statement",
+    topic: "Barley Disease Vectors & Pathogens",
+    statement1: "Barley Yellow Dwarf Virus (BYDV) is transmitted across cereal crops by aphid vectors.",
+    statement2: "Scald in barley is caused by Xanthomonas campestris.",
+    options: [
+      "Statement 1 is true",
+      "Statement 2 is true",
+      "All statements are true",
+      "All statements are false"
+    ],
+    answer: 0, // A
+    explanation: "Statement 1 is TRUE: BYDV is transmitted by aphids. Statement 2 is FALSE: Scald in barley is caused by the fungus Rhynchosporium secalis."
+  },
+  {
+    id: 73,
+    type: "two-statement",
+    topic: "Sorghum Genetics & Heat Tolerance",
+    statement1: "Sorghum bicolor possesses a somatic chromosome number of 2n = 20 and utilizes C4 photosynthesis.",
+    statement2: "Sorghum is grown exclusively in cold subarctic regions because heat destroys its root system.",
+    options: [
+      "Statement 1 is true",
+      "Statement 2 is true",
+      "All statements are true",
+      "All statements are false"
+    ],
+    answer: 0, // A
+    explanation: "Statement 1 is TRUE: Sorghum bicolor is a C4 grass, 2n=20. Statement 2 is FALSE: Sorghum is exceptionally drought- and heat-tolerant, grown extensively in tropical and warm semi-arid regions."
+  },
+  {
+    id: 74,
+    type: "mcq",
+    topic: "Sorghum Agronomic Sowing Depth",
+    question: "What is the recommended sowing depth range for planting sorghum seeds in field cultivation?",
+    options: [
+      "2–5 mm",
+      "25–50 mm",
+      "100–150 mm",
+      "200–250 mm"
+    ],
+    answer: 1, // B
+    explanation: "Sorghum agronomy specifies a recommended sowing depth of 25–50 mm (2.5–5.0 cm)."
+  },
+  {
+    id: 75,
+    type: "two-statement",
+    topic: "Cereal Science Comprehensive Synthesis",
+    statement1: "In mature cereal grains, starch represents the single most abundant carbohydrate across all species.",
+    statement2: "Gluten network formation in wheat flour occurs spontaneously in dry flour without requiring hydration or mechanical mixing.",
+    options: [
+      "Statement 1 is true",
+      "Statement 2 is true",
+      "All statements are true",
+      "All statements are false"
+    ],
+    answer: 0, // A
+    explanation: "Statement 1 is TRUE: Starch is the predominant carbohydrate in all mature cereal grains. Statement 2 is FALSE: Gluten network formation strictly REQUIRES hydration with water and mechanical mixing forces to unite gliadin and glutenin."
+  }
+];
+
+// STATE MANAGEMENT
+let currentQIndex = 0;
+let userAnswers = new Array(quizData.length).fill(null);
+let reviewFilter = 'all';
+
+// INITIALIZATION
+window.onload = () => {
+  renderQuestion();
+  buildNavGrid();
+};
+
+function renderQuestion() {
+  const q = quizData[currentQIndex];
+  const total = quizData.length;
+
+  // Update Progress & Trackers
+  document.getElementById('questionTracker').innerText = `Question ${currentQIndex + 1} of ${total}`;
+  document.getElementById('progressBar').style.width = `${((currentQIndex + 1) / total) * 100}%`;
+  
+  let currentScore = userAnswers.reduce((acc, ans, idx) => (ans === quizData[idx].answer ? acc + 1 : acc), 0);
+  document.getElementById('scoreTracker').innerText = `Score: ${currentScore} / ${total}`;
+
+  const container = document.getElementById('quizBody');
+  const isAnswered = userAnswers[currentQIndex] !== null;
+  const selectedAns = userAnswers[currentQIndex];
+
+  let html = `
+    <span class="q-meta-tag">${q.topic}</span>
+  `;
+
+  if (q.type === 'two-statement') {
+    html += `
+      <div class="q-text">Item ${q.id}: Evaluate Statement 1 and Statement 2 independently, then select the correct statement logic option.</div>
+      <div class="statement-box">
+        <div class="statement"><span class="stmt-label">Statement 1:</span> ${q.statement1}</div>
+        <div class="statement"><span class="stmt-label">Statement 2:</span> ${q.statement2}</div>
+      </div>
+    `;
+  } else {
+    html += `
+      <div class="q-text">Item ${q.id}: ${q.question}</div>
+    `;
+  }
+
+  html += `<div class="options-grid">`;
+  const letters = ['A', 'B', 'C', 'D'];
+
+  q.options.forEach((opt, idx) => {
+    let btnClass = "option-btn";
+    if (isAnswered) {
+      if (idx === q.answer) {
+        btnClass += " correct-choice";
+      } else if (idx === selectedAns) {
+        btnClass += " wrong-choice";
+      }
+    } else if (selectedAns === idx) {
+      btnClass += " selected";
+    }
+
+    html += `
+      <button class="${btnClass}" onclick="selectOption(${idx})" ${isAnswered ? 'disabled' : ''}>
+        <span class="option-letter">${letters[idx]}</span>
+        <span>${opt}</span>
+      </button>
+    `;
+  });
+  html += `</div>`;
+
+  // Explanation Box
+  if (isAnswered) {
+    const isCorrect = selectedAns === q.answer;
+    html += `
+      <div class="explanation-box visible">
+        <div class="exp-title ${isCorrect ? 'correct' : 'incorrect'}">
+          ${isCorrect ? '✓ Correct Answer' : '✗ Incorrect Choice'}
+        </div>
+        <div class="exp-detail">
+          <strong>Key Explanation:</strong> ${q.explanation}
+        </div>
+      </div>
+    `;
+  }
+
+  // Navigation Buttons
+  html += `
+    <div class="controls">
+      <button class="btn btn-secondary" onclick="prevQuestion()" ${currentQIndex === 0 ? 'disabled' : ''}>Previous</button>
+      ${currentQIndex === total - 1 ? 
+        `<button class="btn btn-primary" onclick="finishQuiz()">Finish Examination</button>` : 
+        `<button class="btn btn-primary" onclick="nextQuestion()">Next Question</button>`
+      }
+    </div>
+  `;
+
+  container.innerHTML = html;
+  updateNavGridUI();
+}
+
+function selectOption(index) {
+  if (userAnswers[currentQIndex] !== null) return;
+  userAnswers[currentQIndex] = index;
+  renderQuestion();
+}
+
+function nextQuestion() {
+  if (currentQIndex < quizData.length - 1) {
+    currentQIndex++;
+    renderQuestion();
+  }
+}
+
+function prevQuestion() {
+  if (currentQIndex > 0) {
+    currentQIndex--;
+    renderQuestion();
+  }
+}
+
+function buildNavGrid() {
+  const grid = document.getElementById('gridLayout');
+  grid.innerHTML = '';
+  quizData.forEach((_, idx) => {
+    const item = document.createElement('div');
+    item.className = 'grid-item';
+    item.id = `grid-item-${idx}`;
+    item.innerText = idx + 1;
+    item.onclick = () => {
+      currentQIndex = idx;
+      renderQuestion();
+      closeNavGrid();
+    };
+    grid.appendChild(item);
+  });
+}
+
+function updateNavGridUI() {
+  quizData.forEach((_, idx) => {
+    const item = document.getElementById(`grid-item-${idx}`);
+    if (!item) return;
+    item.className = 'grid-item';
+    if (userAnswers[idx] !== null) item.classList.add('answered');
+    if (idx === currentQIndex) item.classList.add('current');
+  });
+}
+
+function openNavGrid() {
+  document.getElementById('navGridModal').style.display = 'flex';
+}
+
+function closeNavGrid() {
+  document.getElementById('navGridModal').style.display = 'none';
+}
+
+function finishQuiz() {
+  document.getElementById('quizBody').style.display = 'none';
+  document.getElementById('resultsBody').style.display = 'block';
+
+  let score = userAnswers.reduce((acc, ans, idx) => (ans === quizData[idx].answer ? acc + 1 : acc), 0);
+  document.getElementById('finalScoreVal').innerText = score;
+
+  const pct = (score / quizData.length) * 100;
+  let title = "";
+  let feedback = "";
+
+  if (pct >= 90) {
+    title = "Outstanding Distinction!";
+    feedback = "Exceptional mastery of cereal science, chemical compositions, cellular structures, processing behavior, and taxonomy.";
+  } else if (pct >= 75) {
+    title = "Passed with Honors";
+    feedback = "Strong analytical performance. You demonstrate thorough understanding of complex cereal chemistry and botanical traits.";
+  } else if (pct >= 60) {
+    title = "Satisfactory Pass";
+    feedback = "Good foundation, but review subtle distractor items and statement evaluations to improve mastery.";
+  } else {
+    title = "Needs Further Review";
+    feedback = "Review the uploaded material carefully, focusing on detailed anatomical fractions, protein rheology, and specific diseases.";
+  }
+
+  document.getElementById('gradeTitle').innerText = title;
+  document.getElementById('gradeFeedback').innerText = feedback;
+
+  renderReviewSection();
+}
+
+function renderReviewSection() {
+  const container = document.getElementById('reviewContainer');
+  const letters = ['A', 'B', 'C', 'D'];
+  container.innerHTML = '';
+
+  quizData.forEach((q, idx) => {
+    const uAns = userAnswers[idx];
+    const isCorrect = uAns === q.answer;
+
+    if (reviewFilter === 'correct' && !isCorrect) return;
+    if (reviewFilter === 'incorrect' && isCorrect) return;
+
+    let card = document.createElement('div');
+    card.className = `review-card ${isCorrect ? 'is-correct' : 'is-incorrect'}`;
+
+    let content = `
+      <div style="font-weight: 700; margin-bottom: 6px;">Item ${q.id}: ${q.topic} ${isCorrect ? '<span style="color:var(--correct-border)">(Correct)</span>' : '<span style="color:var(--incorrect-border)">(Incorrect)</span>'}</div>
+    `;
+
+    if (q.type === 'two-statement') {
+      content += `
+        <div style="margin-bottom: 8px; font-size: 0.85rem; background: #f1f5f9; padding: 8px; border-radius: 4px;">
+          <div><strong>Statement 1:</strong> ${q.statement1}</div>
+          <div><strong>Statement 2:</strong> ${q.statement2}</div>
+        </div>
+      `;
+    } else {
+      content += `<div style="margin-bottom: 8px; font-weight: 500;">${q.question}</div>`;
+    }
+
+    content += `
+      <div style="font-size: 0.85rem; margin-bottom: 4px;">
+        <strong>Your Answer:</strong> ${uAns !== null ? letters[uAns] + '. ' + q.options[uAns] : 'Not Answered'}
+      </div>
+      <div style="font-size: 0.85rem; color: var(--correct-text); margin-bottom: 8px;">
+        <strong>Correct Answer:</strong> ${letters[q.answer]}. ${q.options[q.answer]}
+      </div>
+      <div style="font-size: 0.85rem; color: var(--text-muted); line-height: 1.5; background: #f8fafc; padding: 8px; border-radius: 4px;">
+        <strong>Explanation:</strong> ${q.explanation}
+      </div>
+    `;
+
+    card.innerHTML = content;
+    container.appendChild(card);
+  });
+}
+
+function filterReview(type) {
+  reviewFilter = type;
+  document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+  event.target.classList.add('active');
+  renderReviewSection();
+}
+
+function restartQuiz() {
+  currentQIndex = 0;
+  userAnswers = new Array(quizData.length).fill(null);
+  document.getElementById('resultsBody').style.display = 'none';
+  document.getElementById('quizBody').style.display = 'block';
+  renderQuestion();
+}
+</script>
+</body>
+</html>
